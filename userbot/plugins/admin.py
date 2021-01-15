@@ -30,7 +30,7 @@ from .sql_helper.mute_sql import is_muted, mute, unmute
 PP_TOO_SMOL = "`The image is too small`"
 PP_ERROR = "`Failure while processing the image`"
 NO_ADMIN = "`I am not an admin nub nibba!`"
-NO_PERM = "`I don't have sufficient permissions! This is so sed. Alexa play despacito`"
+NO_PERM = "`I don't have sufficient permissions! Alexa play Lag Gaye`"
 CHAT_PP_CHANGED = "`Chat Picture Changed`"
 INVALID_MEDIA = "`Invalid Extension`"
 
@@ -73,8 +73,13 @@ async def set_group_photo(gpic):
         await edit_or_reply(gpic, "`I don't think this is a group.`")
         return
     replymsg = await gpic.get_reply_message()
-    await gpic.get_chat()
+    chat = await gpic.get_chat()
+    admin = chat.admin_rights
+    creator = chat.creator
     photo = None
+    if not admin and not creator:
+        await edit_or_reply(gpic, NO_ADMIN)
+        return
     if replymsg and replymsg.media:
         if isinstance(replymsg.media, MessageMediaPhoto):
             photo = await gpic.client.download_media(message=replymsg.photo)
@@ -125,7 +130,7 @@ async def promote(promt):
         delete_messages=True,
         pin_messages=True,
     )
-    catevent = await edit_or_reply(promt, "`Promoting...`")
+    catevent = await edit_or_reply(promt, "`Promoting...😏😏`")
     user, rank = await get_user_from_event(promt)
     if not rank:
         rank = "Admin"
@@ -133,7 +138,7 @@ async def promote(promt):
         return
     try:
         await promt.client(EditAdminRequest(promt.chat_id, user.id, new_rights, rank))
-        await catevent.edit("`Promoted Successfully! Now gib Party`")
+        await catevent.edit("`Promoted Successfully! Now u Are Pro AF😏😏`")
     except BadRequestError:
         await catevent.edit(NO_PERM)
         return
@@ -158,7 +163,7 @@ async def demote(dmod):
     if not admin and not creator:
         await edit_or_reply(dmod, NO_ADMIN)
         return
-    catevent = await edit_or_reply(dmod, "`Demoting...`")
+    catevent = await edit_or_reply(dmod, "`Demoting...😏😏`")
     rank = "admeme"
     user = await get_user_from_event(dmod)
     user = user[0]
@@ -177,7 +182,7 @@ async def demote(dmod):
     except BadRequestError:
         await catevent.edit(NO_PERM)
         return
-    await catevent.edit("`Demoted Successfully! Betterluck next time`")
+    await catevent.edit("`Demoted Successfully! BC PIRO H HAM 😏😏`")
     if BOTLOG:
         await dmod.client.send_message(
             BOTLOG_CHATID,
@@ -249,7 +254,7 @@ async def nothanos(unbon):
         return
     try:
         await unbon.client(EditBannedRequest(unbon.chat_id, user.id, UNBAN_RIGHTS))
-        await catevent.edit("```Unbanned Successfully. Granting another chance.```")
+        await catevent.edit("```Unbanned Successfully. chal bsdk chance diya tuje```")
         if BOTLOG:
             await unbon.client.send_message(
                 BOTLOG_CHATID,
@@ -291,7 +296,7 @@ async def startmute(event):
         except Exception as e:
             await event.edit("Error occured!\nError is " + str(e))
         else:
-            await event.edit("Successfully muted that person.\n**｀-´)⊃━☆ﾟ.*･｡ﾟ **")
+            await event.edit("Successfully muted that person.🤪🤪\n**｀-´)⊃━☆ﾟ.*･｡ﾟ **")
         if BOTLOG:
             await event.client.send_message(
                 BOTLOG_CHATID,
@@ -315,7 +320,7 @@ async def startmute(event):
             creator = chat.creator
             if not admin and not creator:
                 await edit_or_reply(
-                    event, "`You can't mute a person without admin rights niqq.` ಥ﹏ಥ  "
+                    event, "`I can't mute a person without admin rights.` ಥ﹏ಥ  "
                 )
                 return
             result = await event.client(
@@ -434,6 +439,96 @@ async def endmute(event):
             )
 
 
+@bot.on(admin_cmd(pattern="pin($| (.*))", command="pin"))
+@bot.on(sudo_cmd(pattern="pin($| (.*))", command="pin", allow_sudo=True))
+@errors_handler
+async def pin(msg):
+    if msg.fwd_from:
+        return
+    if not msg.is_private:
+        chat = await msg.get_chat()
+        admin = chat.admin_rights
+        creator = chat.creator
+        if not admin and not creator:
+            return await edit_delete(msg, NO_ADMIN, 5)
+    to_pin = msg.reply_to_msg_id
+    if not to_pin:
+        return await edit_delete(msg, "`Reply to a message to pin it.`", 5)
+    options = msg.pattern_match.group(1)
+    is_silent = False
+    if options == "loud":
+        is_silent = True
+    try:
+        await msg.client.pin_message(msg.chat_id, to_pin, notify=is_silent)
+    except BadRequestError:
+        return await edit_delete(msg, NO_PERM, 5)
+    except Exception as e:
+        return await edit_delete(msg, f"`{str(e)}`", 5)
+    await edit_delete(msg, "`Pinned Successfully!`", 3)
+    user = await get_user_from_id(msg.sender_id, msg)
+    if BOTLOG and not msg.is_private:
+        try:
+            await msg.client.send_message(
+                BOTLOG_CHATID,
+                "#PIN\n"
+                f"ADMIN: [{user.first_name}](tg://user?id={user.id})\n"
+                f"CHAT: {msg.chat.title}(`{msg.chat_id}`)\n"
+                f"LOUD: {is_silent}",
+            )
+        except:
+            pass
+
+
+@bot.on(admin_cmd(pattern="unpin($| (.*))", command="unpin"))
+@bot.on(sudo_cmd(pattern="unpin($| (.*))", command="unpin", allow_sudo=True))
+@errors_handler
+async def pin(msg):
+    if msg.fwd_from:
+        return
+    if not msg.is_private:
+        chat = await msg.get_chat()
+        admin = chat.admin_rights
+        creator = chat.creator
+        if not admin and not creator:
+            await edit_delete(msg, NO_ADMIN, 5)
+            return
+    to_unpin = msg.reply_to_msg_id
+    options = (msg.pattern_match.group(1)).strip()
+    if not to_unpin and options != "all":
+        await edit_delete(msg, "`Reply to a message to unpin it or use .unpin all`", 5)
+        return
+    if to_unpin and not options:
+        try:
+            await msg.client.unpin_message(msg.chat_id, to_unpin)
+        except BadRequestError:
+            return await edit_delete(msg, NO_PERM, 5)
+        except Exception as e:
+            return await edit_delete(msg, f"`{str(e)}`", 5)
+    elif options == "all":
+        try:
+            await msg.client.unpin_message(msg.chat_id)
+        except BadRequestError:
+            return await edit_delete(msg, NO_PERM, 5)
+        except Exception as e:
+            return await edit_delete(msg, f"`{str(e)}`", 5)
+    else:
+        return await edit_delete(
+            msg, "`Reply to a message to unpin it or use .unpin all`", 5
+        )
+    await edit_delete(msg, "`Unpinned Successfully!`", 3)
+    user = await get_user_from_id(msg.sender_id, msg)
+    if BOTLOG and not msg.is_private:
+        try:
+            await msg.client.send_message(
+                BOTLOG_CHATID,
+                "#UNPIN\n"
+                f"**Admin : **[{user.first_name}](tg://user?id={user.id})\n"
+                f"**Chat : **{msg.chat.title}(`{msg.chat_id}`)\n",
+            )
+        except:
+            pass
+
+
 @bot.on(admin_cmd(pattern="kick(?: |$)(.*)", command="kick"))
 @bot.on(sudo_cmd(pattern="kick(?: |$)(.*)", command="kick", allow_sudo=True))
 @errors_handler
@@ -470,87 +565,6 @@ async def kick(usr):
             f"USER: [{user.first_name}](tg://user?id={user.id})\n"
             f"CHAT: {usr.chat.title}(`{usr.chat_id}`)\n",
         )
-
-
-@bot.on(admin_cmd(pattern="pin($| (.*))", command="pin"))
-@bot.on(sudo_cmd(pattern="pin($| (.*))", command="pin", allow_sudo=True))
-@errors_handler
-async def pin(msg):
-    if msg.fwd_from:
-        return
-    if not msg.is_private:
-        await msg.get_chat()
-    to_pin = msg.reply_to_msg_id
-    if not to_pin:
-        return await edit_delete(msg, "`Reply to a message to pin it.`", 5)
-    options = msg.pattern_match.group(1)
-    is_silent = False
-    if options == "loud":
-        is_silent = True
-    try:
-        await msg.client.pin_message(msg.chat_id, to_pin, notify=is_silent)
-    except BadRequestError:
-        return await edit_delete(msg, NO_PERM, 5)
-    except Exception as e:
-        return await edit_delete(msg, f"`{str(e)}`", 5)
-    await edit_delete(msg, "`Pinned Successfully!`", 3)
-    user = await get_user_from_id(msg.sender_id, msg)
-    if BOTLOG and not msg.is_private:
-        try:
-            await msg.client.send_message(
-                BOTLOG_CHATID,
-                "#PIN\n"
-                f"ADMIN: [{user.first_name}](tg://user?id={user.id})\n"
-                f"CHAT: {msg.chat.title}(`{msg.chat_id}`)\n"
-                f"LOUD: {is_silent}",
-            )
-        except:
-            pass
-
-
-@bot.on(admin_cmd(pattern="unpin($| (.*))", command="unpin"))
-@bot.on(sudo_cmd(pattern="unpin($| (.*))", command="unpin", allow_sudo=True))
-@errors_handler
-async def pin(msg):
-    if msg.fwd_from:
-        return
-    if not msg.is_private:
-        await msg.get_chat()
-    to_unpin = msg.reply_to_msg_id
-    options = (msg.pattern_match.group(1)).strip()
-    if not to_unpin and options != "all":
-        await edit_delete(msg, "`Reply to a message to unpin it or use .unpin all`", 5)
-        return
-    if to_unpin and not options:
-        try:
-            await msg.client.unpin_message(msg.chat_id, to_unpin)
-        except BadRequestError:
-            return await edit_delete(msg, NO_PERM, 5)
-        except Exception as e:
-            return await edit_delete(msg, f"`{str(e)}`", 5)
-    elif options == "all":
-        try:
-            await msg.client.unpin_message(msg.chat_id)
-        except BadRequestError:
-            return await edit_delete(msg, NO_PERM, 5)
-        except Exception as e:
-            return await edit_delete(msg, f"`{str(e)}`", 5)
-    else:
-        return await edit_delete(
-            msg, "`Reply to a message to unpin it or use .unpin all`", 5
-        )
-    await edit_delete(msg, "`Unpinned Successfully!`", 3)
-    user = await get_user_from_id(msg.sender_id, msg)
-    if BOTLOG and not msg.is_private:
-        try:
-            await msg.client.send_message(
-                BOTLOG_CHATID,
-                "#UNPIN\n"
-                f"**Admin : **[{user.first_name}](tg://user?id={user.id})\n"
-                f"**Chat : **{msg.chat.title}(`{msg.chat_id}`)\n",
-            )
-        except:
-            pass
 
 
 @bot.on(admin_cmd(pattern="iundlt$", command="iundlt"))
@@ -591,28 +605,28 @@ async def get_user_from_id(user, event):
 
 CMD_HELP.update(
     {
-        "admin": "**Plugin : **`admin`\
-        \n\n  •  **Syntax : **`.setgpic` <reply to image>\
-        \n  •  **Usage : **Changes the group's display picture\
-        \n\n  •  **Syntax : **`.promote` <username/reply> <custom rank (optional)>\
-        \n  •  **Usage : **Provides admin rights to the person in the chat.\
-        \n\n  •  **Syntax : **`.demote `<username/reply>\
-        \n  •  **Usage : **Revokes the person's admin permissions in the chat.\
-        \n\n  •  **Syntax : **`.ban` <username/reply> <reason (optional)>\
-        \n  •  **Usage : **Bans the person off your chat.\
-        \n\n  •  **Syntax : **`.unban` <username/reply>\
-        \n  •  **Usage : **Removes the ban from the person in the chat.\
-        \n\n  •  **Syntax : **`.mute` <username/reply> <reason (optional)>\
-        \n  •  **Usage : **Mutes the person in the chat, works on admins too.\
-        \n\n  •  **Syntax : **`.unmute` <username/reply>\
-        \n  •  **Usage : **Removes the person from the muted list.\
-        \n\n  •  **Syntax : **`.pin `<reply> or `.pin loud`\
-        \n  •  **Usage : **Pins the replied message in Group\
-        \n\n  •  **Syntax : **`.unpin `<reply> or `.unpin all`\
-        \n  •  **Usage : **Unpins the replied message in Group\
-        \n\n  •  **Syntax : **`.kick `<username/reply> \
-        \n  •  **Usage : **kick the person off your chat.\
-        \n\n  •  **Syntax : **`.iundlt`\
-        \n  •  **Usage : **display last 5 deleted messages in group."
+        "admin": "__**PLUGIN NAME :** Admin__\
+\n\n📌** CMD ➥** `.setgpic` <reply to image>\
+\n**USAGE   ➥  **Changes the group's display picture\
+\n\n📌** CMD ➥** `.promote` <username/reply> <custom rank (optional)>\
+\n**USAGE   ➥  **Provides admin rights to the person in the chat.\
+\n\n📌** CMD ➥** `.demote` <username/reply>\
+\n**USAGE   ➥  **Revokes the person's admin permissions in the chat.\
+\n\n📌** CMD ➥** `.ban` <username/reply> <reason (optional)>\
+\n**USAGE   ➥  **Bans the person off your chat.\
+\n\n📌** CMD ➥** `.unban` <username/reply>\
+\n**USAGE   ➥  **Removes the ban from the person in the chat.\
+\n\n📌** CMD ➥** `.mute` <username/reply> <reason (optional)>\
+\n**USAGE   ➥  **Mutes the person in the chat, works on admins too.\
+\n\n📌** CMD ➥** `.unmute` <username/reply>\
+\n**USAGE   ➥  **Removes the person from the muted list.\
+\n\n📌** CMD ➥** `.pin` <reply> or `.pin loud`\
+\n**USAGE   ➥  **Pins the replied message in Group\
+\n\n📌** CMD ➥** `.unpin` <reply> or `.unpin all`\
+\n**USAGE   ➥  **Unpins the replied message in Group\
+\n\n📌** CMD ➥** `.kick` <username/reply> \
+\n**USAGE   ➥  **kick the person off your chat.\
+\n\n📌** CMD ➥** `.iundlt`\
+\n**USAGE   ➥  **display last 5 deleted messages in group."
     }
 )
